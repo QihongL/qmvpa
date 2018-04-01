@@ -1,4 +1,9 @@
-# qmvpa
-my mvpa package 
+# A toolbox for multivoxel pattern analysis
 
-<a href="https://pypi.python.org/pypi?%3Aaction=pkg_edit&name=qmvpa">PyPI link</a>
+
+Functionalities: 
+- Representational Similarity Analysis
+
+
+Links: 
+- <a href="https://pypi.python.org/pypi?%3Aaction=pkg_edit&name=qmvpa">PyPI link</a>
