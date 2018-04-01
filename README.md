@@ -3,6 +3,9 @@
 
 Functionalities: 
 - Representational Similarity Analysis
+  - within-subject RSA
+  - inter-subject RSA
+  - 2nd order correlation 
 
 
 Links: 
