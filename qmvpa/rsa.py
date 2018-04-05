@@ -2,6 +2,7 @@
 """
 
 import numpy as np
+from scipy.spatial import procrustes
 
 
 def within_RSMs(Xs):
@@ -23,7 +24,7 @@ def within_RSMs(Xs):
 
 
 def correlate_2RSMs(rsm1, rsm2):
-    """Compute the correlation between 2 RSMs
+    """Compute the correlation between 2 RSMs (2nd order correlations)
     Parameters
     ----------
     rsm_i: a 2d array in the form of (n_examples x n_examples)
@@ -110,6 +111,16 @@ def inter_RSMs(matrix_list):
         intersubj_rsms.append(inter_RSM(matrix_array[loo_idx], mean_Hs))
     intersubj_rsm = np.mean(intersubj_rsms, axis=0)
     return intersubj_rsm
+
+
+def inter_procrustes(matrix_array):
+    # input: matrix_array, n_subj x n_units x n_examples
+    n_nets = np.shape(matrix_array)[0]
+    D = np.zeros((n_nets, n_nets))
+    for i in range(n_nets):
+        for j in np.arange(0, i):
+            _, _, D[i, j] = procrustes(matrix_array[i], matrix_array[j])
+    return D
 
 
 """ helper functions """
