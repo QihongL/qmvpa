@@ -3,6 +3,7 @@
 
 import numpy as np
 from scipy.spatial import procrustes
+from qmvpa.utils import reflect_upper_triangular_part
 
 
 def within_RSMs(Xs):
@@ -74,17 +75,20 @@ def inter_RSM(m1, m2):
     intersubj_rsm
         corr(col_i(m1), col_j(m2)), for all i and j
     """
-    assert(np.shape(m1)[1] == np.shape(m2)[1])
+    assert np.shape(m1) == np.shape(m2)
     n_examples = np.shape(m1)[1]
-    # compute the correlation matrix of hidden activity
-    intersubj_rsm = np.zeros((n_examples, n_examples))
-    for i in range(n_examples):
-        for j in np.arange(0, i+1, 1):
-            intersubj_rsm[i, j] = np.corrcoef(m1[:, i], m2[:, j])[0, 1]
-            if all(m1[:, i] == 0) or all(m2[:, j] == 0):
-                intersubj_rsm[i, j] = 0
-    # fillin the upper triangular part by symmetry
-    intersubj_rsm = reflect_upper_triangular_part(intersubj_rsm)
+    intersubj_rsm = np.corrcoef(m1.T, m2.T)[:n_examples, n_examples:]
+    # assert(np.shape(m1)[1] == np.shape(m2)[1])
+    # n_examples = np.shape(m1)[1]
+    # # compute the correlation matrix of hidden activity
+    # intersubj_rsm = np.zeros((n_examples, n_examples)
+    # for i in range(n_examples):
+    #     for j in np.arange(0, i+1, 1):
+    #         intersubj_rsm[i, j] = np.corrcoef(m1[:, i], m2[:, j])[0, 1]
+    #         if all(m1[:, i] == 0) or all(m2[:, j] == 0):
+    #             intersubj_rsm[i, j] = 0
+    # # fillin the upper triangular part by symmetry
+    # intersubj_rsm = reflect_upper_triangular_part(intersubj_rsm)
     return intersubj_rsm
 
 
@@ -121,41 +125,3 @@ def inter_procrustes(matrix_array):
         for j in np.arange(0, i):
             _, _, D[i, j] = procrustes(matrix_array[i], matrix_array[j])
     return D
-
-
-""" helper functions """
-
-
-def reflect_upper_triangular_part(matrix):
-    """Copy the lower triangular part to the upper triangular part
-        This speed up RSA computation
-    Parameters
-    ----------
-    matrix: a 2d array
-
-    Returns
-    -------
-    matrix with upper triangular part filled
-    """
-    irows, icols = np.triu_indices(np.shape(matrix)[0], 1)
-    matrix[irows, icols] = matrix[icols, irows]
-    return matrix
-
-
-def moving_window_avg(matrix, axis, win_size):
-    """ moving window averaging along axis 0
-    """
-    n0, n1 = np.shape(matrix)
-    if axis == 0:
-        n_new = int(n0 / win_size)
-        matrix_avg = np.zeros((n_new, n1))
-        for i in range(n_new):
-            idx_start = i * win_size
-            idx_end = (i + 1) * win_size
-            matrix_avg[i, :] = np.mean(matrix[idx_start: idx_end, :], axis=0)
-    elif axis == 1:
-        # just transpose the matrix ...
-        raise ValueError('Oops you haven\'t implement it!')
-    else:
-        raise ValueError('axis should be 0 or 1!')
-    return matrix_avg

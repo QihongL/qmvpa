@@ -11,7 +11,12 @@ Functionalities:
 - Factor Models 
   - Shared response modeling  
   - Principal component analysis
-  - Auxiliary methods such as intersubject correlation and variance explained calculation 
+  - Auxiliary methods such as 1-step detSRM 
+
+- Classifications
+  - SVM inner-loop cross-validation
+
+- Utils
 
 Install: 
 - This package is designed to adapt to my own workflow, but if you would like to use it, simply `pip install qmvpa`
