@@ -3,7 +3,8 @@
 
 import numpy as np
 from scipy.spatial import procrustes
-from qmvpa.utils import reflect_upper_triangular_part
+from qmvpa.utils import reflect_upper_triangular_part, \
+    vectorize_lower_trigular_part
 
 
 def within_RSMs(Xs):
@@ -36,8 +37,12 @@ def correlate_2RSMs(rsm1, rsm2):
     r: float
         linear_correlation(rsm1, rsm2)
     """
-    # compute the linear correlation of 2 vectorized RSMs
-    r = np.corrcoef(np.reshape(rsm1, (-1,)), np.reshape(rsm2, (-1,)))[0, 1]
+    assert np.shape(rsm1) == np.shape(rsm2)
+    # only compare the lower triangular parts (w/o diagonal values)
+    rsm1_vec_lower = vectorize_lower_trigular_part(rsm1)
+    rsm2_vec_lower = vectorize_lower_trigular_part(rsm2)
+    r = np.corrcoef(rsm1_vec_lower, rsm2_vec_lower)[0, 1]
+    # r = np.corrcoef(np.reshape(rsm1, (-1,)), np.reshape(rsm2, (-1,)))[0, 1]
     return r
 
 

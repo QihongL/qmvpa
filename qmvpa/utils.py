@@ -5,6 +5,23 @@ def mov_mean(x, win_size):
     return np.convolve(x, np.ones((win_size,))/win_size, mode='valid')
 
 
+def vectorize_lower_trigular_part(matrix):
+    """Exract the lower triangular entries for a matrix
+        useful for computing 2nd order similarity for 2 RDMs, where
+        diagonal values should be ignored
+    Parameters
+    ----------
+    matrix: a 2d array
+
+    Returns
+    -------
+    a vector of lower triangular entries
+    """
+    assert np.shape(matrix)[0] == np.shape(matrix)[1]
+    idx_lower = np.tril_indices(np.shape(matrix)[0], -1)
+    return matrix[idx_lower]
+
+
 def reflect_upper_triangular_part(matrix):
     """Copy the lower triangular part to the upper triangular part
         This speed up RSA computation
