@@ -1,6 +1,10 @@
 import numpy as np
 
 
+def mov_mean(x, win_size):
+    return np.convolve(x, np.ones((win_size,))/win_size, mode='valid')
+
+
 def reflect_upper_triangular_part(matrix):
     """Copy the lower triangular part to the upper triangular part
         This speed up RSA computation

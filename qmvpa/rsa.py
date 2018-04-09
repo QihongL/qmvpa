@@ -78,17 +78,6 @@ def inter_RSM(m1, m2):
     assert np.shape(m1) == np.shape(m2)
     n_examples = np.shape(m1)[1]
     intersubj_rsm = np.corrcoef(m1.T, m2.T)[:n_examples, n_examples:]
-    # assert(np.shape(m1)[1] == np.shape(m2)[1])
-    # n_examples = np.shape(m1)[1]
-    # # compute the correlation matrix of hidden activity
-    # intersubj_rsm = np.zeros((n_examples, n_examples)
-    # for i in range(n_examples):
-    #     for j in np.arange(0, i+1, 1):
-    #         intersubj_rsm[i, j] = np.corrcoef(m1[:, i], m2[:, j])[0, 1]
-    #         if all(m1[:, i] == 0) or all(m2[:, j] == 0):
-    #             intersubj_rsm[i, j] = 0
-    # # fillin the upper triangular part by symmetry
-    # intersubj_rsm = reflect_upper_triangular_part(intersubj_rsm)
     return intersubj_rsm
 
 
@@ -125,3 +114,55 @@ def inter_procrustes(matrix_array):
         for j in np.arange(0, i):
             _, _, D[i, j] = procrustes(matrix_array[i], matrix_array[j])
     return D
+
+
+def isc(X_i, X_j):
+    """Compute ISC across 2 subjecsts: subject i <-> subject j
+    Parameters
+    ----------
+    X_i: 2d array - num_voxels_i x num_examples
+    X_j: 2d array - num_voxels_j x num_examples
+        the activation matrices
+
+    Returns
+    -------
+    isc_ij: 2d array - num_voxels_i x num_voxels_j
+    isc_ii: 2d array - num_voxels_i x num_voxels_i
+    isc_jj: 2d array - num_voxels_j x num_voxels_j
+    """
+    assert np.shape(X_i)[1] == np.shape(X_j)[1]
+    # compute the full isc map
+    # with shape (num_voxels_i + num_voxels_j) x (num_voxels_i + num_voxels_j)
+    isc_map = np.corrcoef(X_i, X_j)
+    # divide isc maps
+    n_voxs_i = np.shape(X_i)[0]
+    isc_ij = isc_map[:n_voxs_i, n_voxs_i:]
+    isc_ii = isc_map[:n_voxs_i, :n_voxs_i]
+    isc_jj = isc_map[n_voxs_i:, n_voxs_i:]
+    return isc_ij, isc_ii, isc_jj
+
+
+def isc_pairwise(Xs):
+    """Compute all pair-wise ISC
+    Parameters
+    ----------
+    Xs: {X_i : X_i is num_voxels_i x num_examples}
+
+    Returns
+    -------
+    isc_list: the list of isc matrices for subj i and subj j for i != j
+    isc_ij_mean: the mean of the list above
+    ij_indices: the i-j pairs ordering
+    """
+    ij_indices = []
+    isc_list = []
+    isc_ij_mean = np.zeros((len(Xs), len(Xs)))
+    for i in range(len(Xs)):
+        for j in range(i):
+            # get inter-isc
+            isc_ij, _, _ = isc(Xs[i], Xs[j])
+            # record the computations
+            ij_indices.append([i, j])
+            isc_list.append(isc_ij)
+            isc_ij_mean[i, j] = np.mean(isc_ij)
+    return isc_list, isc_ij_mean, ij_indices
