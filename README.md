@@ -7,6 +7,7 @@ Functionalities:
   - within-subject RSA
   - inter-subject RSA
   - 2nd order correlation 
+  - intersubject correlation 
 
 - Factor Models 
   - Shared response modeling  
@@ -14,9 +15,10 @@ Functionalities:
   - Auxiliary methods such as 1-step detSRM 
 
 - Classifications
-  - SVM inner-loop cross-validation
+  - SVM with inner-loop cross-validation
 
 - Utils
+  - group train-test split 
 
 Install: 
 - This package is designed to adapt to my own workflow, but if you would like to use it, simply `pip install qmvpa`
