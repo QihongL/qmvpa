@@ -24,4 +24,4 @@ Install:
 - This package is designed to adapt to my own workflow, but if you would like to use it, simply `pip install qmvpa`
 
 Links: 
-- <a href="https://pypi.python.org/pypi?%3Aaction=pkg_edit&name=qmvpa">PyPI link</a>
+- <a href="https://pypi.org/project/qmvpa/">PyPI link</a>
