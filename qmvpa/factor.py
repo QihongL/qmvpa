@@ -5,7 +5,7 @@ from brainiak.funcalign.srm import SRM
 from sklearn.decomposition import PCA
 
 
-def fit_srm(n_components, data_train, data_test):
+def fit_srm(data_train, data_test, n_components):
     """Fit the shared response model
     Parameters
     ----------
@@ -15,44 +15,59 @@ def fit_srm(n_components, data_train, data_test):
 
     Returns
     -------
-    data_train_shared: 3d array (n_subj, n_components, n_examples/tps)
+    data_train_sr: 3d array (n_subj, n_components, n_examples/tps)
         the transformed training set
-    data_test_shared: 3d array (n_subj, n_components, n_examples/tps)
+    data_test_sr: 3d array (n_subj, n_components, n_examples/tps)
         the transformed test set
     srm: the fitted model
     """
-    #
-    srm = SRM(features=n_components)
+    assert len(data_train) == len(data_test)
+    n_subjects = len(data_train)
+    subj_var = [np.var(data_subj_i) for data_subj_i in data_train]
     # fit SRM on the training set
-    data_train_shared = srm.fit_transform(data_train)
+    srm = SRM(features=n_components)
+    data_train_sr = srm.fit_transform(data_train)
     # transform the hidden activity (on the test set) to the shared space
-    data_test_shared = srm.transform(data_test)
-    return data_train_shared, data_test_shared, srm
+    data_test_sr = srm.transform(data_test)
+    # transform back to native space, then check reconstruction error
+    reconstructed = [np.dot(srm.w_[k], data_train_sr[k])
+                     for k in range(n_subjects)]
+    # compute variance explained
+    var_exp_train = 1-np.mean([
+        np.square(reconstructed[k]-data_train[k]).mean()/subj_var[k]
+        for k in range(n_subjects)
+    ])
+    return data_train_sr, data_test_sr, srm, var_exp_train
 
 
-def trace_var_exp_srm(n_component_list, Xs_train, Xs_test):
+def tune_srm(data_train, data_test, n_component_list, var_exp_threshold):
+    """
+    if you don't care about the var exp curve, this is faster than
+    compute_var_exp_srm
+    """
+    # fit all srm ...
+    for n_component in n_component_list:
+        Xs_train_sr, Xs_test_sr, srm, var_exp_train = fit_srm(
+            data_train, data_test, n_component)
+        # stop if we are happy with var exp
+        if var_exp_train > var_exp_threshold:
+            return Xs_train_sr, Xs_test_sr, srm, var_exp_train
+    return Xs_train_sr, Xs_test_sr, srm, var_exp_train
+
+
+def compute_var_exp_srm(data_train, data_test, n_component_list, var_exp_threshold):
     """Trace the test set variance explained curve (but don't double dip!)
         over the number of components
     """
-    n_subjects = len(Xs_train)
-    # get the total variance for each subject
-    Xs = [np.hstack([Xs_train[s], Xs_test[s]]) for s in range(n_subjects)]
-    subj_var = [np.var(X) for X in Xs]
-    # compute the variance explained
-    srm_var_exp = np.zeros(len(n_component_list))
-    for i in range(len(n_component_list)):
-        # fit SRM
-        _, Xs_test_shared, srm_model = fit_srm(
-            n_component_list[i], Xs_train, Xs_test)
-        # transform back to native space, then check reconstruction error
-        reconstructed = [np.dot(srm_model.w_[k], Xs_test_shared[k])
-                         for k in range(n_subjects)]
-        # compute variance explained
-        srm_var_exp[i] = 1-np.mean([
-            np.square(reconstructed[k]-Xs_test[k]).mean()/subj_var[k]
-            for k in range(n_subjects)
-        ])
-    return srm_var_exp
+    n_srms = len(n_component_list)
+    var_exp_list = np.zeros(n_srms,)
+    for i in range(n_srms):
+        Xs_train_sr, Xs_test_sr, srm, var_exp_train = fit_srm(
+            data_train, data_test, n_component_list[i])
+        var_exp_list[i] = var_exp_train
+        if var_exp_train > var_exp_threshold:
+            final_srm = srm
+    return Xs_train_sr, Xs_test_sr, final_srm, var_exp_list
 
 
 def procrustes_align(X_new, S_target):
@@ -61,7 +76,7 @@ def procrustes_align(X_new, S_target):
     ----------
     X_new:
         an activation trajectory
-    S_target:
+    S_target: srm_model.s_
         pre-computed shared response as the alignment target
 
     Returns
