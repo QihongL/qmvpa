@@ -1,15 +1,24 @@
 from sklearn.model_selection import GridSearchCV
-from sklearn.svm import SVC
+from sklearn.svm import SVC, LinearSVC
+import numpy as np
 
 
-def tune_svm(X_train, y_train, Cs, kernel='linear'):
+def tune_lsvc(X_train, y_train, param_grid=None):
+    if param_grid == None:
+        param_grid = {
+            'C': np.logspace(-5, 4, 10)
+        }
     # tune SVM
-    tuning_svm = SVC(class_weight='balanced', kernel=kernel)
+    tuning_svm = LinearSVC(
+        class_weight='balanced'
+    )
     tuning_grid = GridSearchCV(
-        estimator=tuning_svm, param_grid=dict(C=Cs), scoring='accuracy')
-    # fit the tuning_grid parameters
+        estimator=tuning_svm, param_grid=param_grid, n_jobs=-1
+    )
     tuning_grid.fit(X_train, y_train)
-    # fit final model
-    final_svm = SVC(C=tuning_grid.best_estimator_.C,
-                    class_weight='balanced', kernel=kernel)
-    return final_svm, tuning_grid
+    return tuning_grid.best_estimator_, tuning_grid
+
+# from sklearn.metrics import confusion_matrix
+# cf_mat = confusion_matrix(Ys_test_srm_stkd,
+#                           final_svm.predict(Xs_test_srm_stkd))
+# plt.imshow(cf_mat, cmap='viridis')
