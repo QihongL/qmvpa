@@ -1,4 +1,19 @@
 import numpy as np
+import seaborn as sns
+
+
+def set_sns_style():
+    # This sets reasonable defaults for font size for
+    # a figure that will go in a paper
+    sns.set_context("paper")
+    # Set the font to be serif, rather than sans
+    sns.set(style='white', font_scale=1.3, rc={"lines.linewidth": 3})
+    # Make the background white, and specify the
+    # specific font family
+    # sns.set_style("white", {
+    #     "font.family": "serif",
+    #     "font.serif": ["Times", "Palatino", "serif"]
+    # })
 
 
 def mov_mean(x, win_size):
@@ -64,6 +79,50 @@ def print_dict(input_dict):
 def print_list(input_list):
     for item in input_list:
         print('%s' % item)
+
+
+
+"""file io"""
+
+def load_json_as_dict(fpath): 
+    """Get a .json file path, output a dict
+    """
+    json1_file = open(fpath)
+    json1_str = json1_file.read()
+    json1_data = json.loads(json1_str)
+    return json1_data    
+
+
+def save_dict_as_json(input_dict, save_path): 
+    """Save the dictionary as a .json file 
+    """
+    assert os.path.exists(os.path.dirname(save_path))
+    with open(save_path, 'w') as f:
+        json.dump(input_dict, f)
+        
+    
+def save_dict_by_pickle(input_dict, save_path): 
+    """Save the dictionary
+    """    
+    pickle.dump(input_dict, open(save_path, "wb"))
+    
+    
+def load_dict_by_pickle(fpath): 
+    """Load the dictionary
+    """    
+    return pickle.load(open(fpath, "rb"))   
+
+
+def save_df_by_pickle(input_df, save_path): 
+    """Save the dictionary
+    """        
+    input_df.to_pickle(save_path)
+    
+    
+def load_df_by_pickle(fpath): 
+    """Load the dictionary
+    """        
+    return pd.read_pickle(fpath)
 
 
 # """demo"""
