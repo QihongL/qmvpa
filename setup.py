@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='qmvpa',
-      version='0.52',
+      version='0.54',
       description='my MVPA package',
       keywords='neuroimaging, machine learning',
       url='https://github.com/qihongl/qmvpa',

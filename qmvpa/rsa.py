@@ -60,14 +60,16 @@ def correlate_RSMs(rsms):
     """
     num_subjects = len(rsms)
     rsm_corrs = np.zeros((num_subjects, num_subjects))
+    rsm_ps = np.zeros((num_subjects, num_subjects))
     for i in range(num_subjects):
         for j in np.arange(0, i+1, 1):
-            rsm_corrs[i, j] = correlate_2RSMs(
+            rsm_corrs[i, j], rsm_ps[i, j] = correlate_2RSMs(
                 rsms[i], rsms[j])
     # fillin the upper triangular part by symmetry
     rsm_corrs = reflect_upper_triangular_part(rsm_corrs)
-    return rsm_corrs
-
+    rsm_ps = reflect_upper_triangular_part(rsm_ps)
+    return rsm_corrs, rsm_ps
+    
 
 def inter_RSM(m1, m2):
     """Compute the RSM for 2 activation matrices
