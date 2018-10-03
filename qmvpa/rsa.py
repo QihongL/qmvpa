@@ -2,6 +2,7 @@
 """
 
 import numpy as np
+from scipy.stats import pearsonr
 from scipy.spatial import procrustes
 from qmvpa.utils import reflect_upper_triangular_part, \
     vectorize_lower_trigular_part
@@ -41,9 +42,9 @@ def correlate_2RSMs(rsm1, rsm2):
     # only compare the lower triangular parts (w/o diagonal values)
     rsm1_vec_lower = vectorize_lower_trigular_part(rsm1)
     rsm2_vec_lower = vectorize_lower_trigular_part(rsm2)
-    r = np.corrcoef(rsm1_vec_lower, rsm2_vec_lower)[0, 1]
-    # r = np.corrcoef(np.reshape(rsm1, (-1,)), np.reshape(rsm2, (-1,)))[0, 1]
-    return r
+    # r = np.corrcoef(rsm1_vec_lower, rsm2_vec_lower)[0, 1]
+    r_val, p_val = pearsonr(rsm1_vec_lower, rsm2_vec_lower)
+    return r_val, p_val
 
 
 def correlate_RSMs(rsms):
