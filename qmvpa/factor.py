@@ -23,35 +23,56 @@ def fit_srm(data_train, data_test, n_components):
     """
     assert len(data_train) == len(data_test)
     n_subjects = len(data_train)
-    subj_var = [np.var(data_subj_i) for data_subj_i in data_train]
     # fit SRM on the training set
     srm = SRM(features=n_components)
     data_train_sr = srm.fit_transform(data_train)
     # transform the hidden activity (on the test set) to the shared space
     data_test_sr = srm.transform(data_test)
-    # transform back to native space, then check reconstruction error
-    reconstructed = [np.dot(srm.w_[k], data_train_sr[k])
-                     for k in range(n_subjects)]
-    # compute variance explained
-    var_exp_train = 1-np.mean([
-        np.square(reconstructed[k]-data_train[k]).mean()/subj_var[k]
-        for k in range(n_subjects)
-    ])
+    # calculate variance explained
+    var_exp_train = calc_srm_var_exp(data_train, data_train_sr, srm.w_)
     return data_train_sr, data_test_sr, srm, var_exp_train
 
+def calc_srm_var_exp(Xs, Xs_sr, Ws): 
+    """
+    Parameters
+    ----------
+    Xs: 3d array (n_subj, n_features, n_examples/tps)
+    Xs_sr: 3d array (n_subj, n_features, n_examples/tps): the transformed data
+    Ws: srm.w_
+
+    Returns
+    -------
+    var_exp_train [list]: variance explained for each subj 
+    """
+    n_subjects = len(Xs)
+    # calculate total variance for each subject
+    subj_var = [np.var(data_subj_i) for data_subj_i in Xs]
+    # transform back to native space, then check reconstruction error
+    reconstructed = [np.dot(Ws[k], Xs_sr[k]) for k in range(n_subjects)]
+    # compute variance explained
+    var_exp_train = 1 - np.array([
+        np.square(reconstructed[k] - Xs[k]).mean() / subj_var[k]
+        for k in range(n_subjects)
+    ])
+    return var_exp_train
+    
 
 def tune_srm(data_train, data_test, n_component_list, var_exp_threshold):
     """
     if you don't care about the var exp curve, this is faster than
     compute_var_exp_srm
     """
-    # fit all srm ...
-    for n_component in n_component_list:
+    if var_exp_threshold == 1: 
         Xs_train_sr, Xs_test_sr, srm, var_exp_train = fit_srm(
-            data_train, data_test, n_component)
-        # stop if we are happy with var exp
-        if var_exp_train > var_exp_threshold:
-            return Xs_train_sr, Xs_test_sr, srm, var_exp_train
+            data_train, data_test, n_component_list[-1])
+    else: 
+        # fit all srm ...
+        for n_component in n_component_list:
+            Xs_train_sr, Xs_test_sr, srm, var_exp_train = fit_srm(
+                data_train, data_test, n_component)
+            # stop if we are happy with var exp
+            if var_exp_train > var_exp_threshold:
+                break 
     return Xs_train_sr, Xs_test_sr, srm, var_exp_train
 
 
@@ -68,6 +89,15 @@ def compute_var_exp_srm(data_train, data_test, n_component_list, var_exp_thresho
         if var_exp_train > var_exp_threshold:
             final_srm = srm
     return Xs_train_sr, Xs_test_sr, final_srm, var_exp_list
+
+
+def compute_srm_cost(Xs_sr):
+    n_subjs = len(Xs_sr)
+    shared_response = np.mean(Xs_sr, axis = 0)
+    cost = 0
+    for s in range(n_subjs): 
+        cost += np.linalg.norm(Xs_sr[s] - shared_response, ord = 'fro')**2
+    return cost
 
 
 def procrustes_align(X_new, S_target):
