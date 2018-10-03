@@ -80,6 +80,18 @@ def print_list(input_list):
     for item in input_list:
         print('%s' % item)
 
+"""multi dim list"""
+
+def list_3d(a, b, c):
+    lst = [[[None
+             for col in range(c)]
+            for col in range(b)]
+           for row in range(a)]
+    return lst        
+
+def list_2d(a, b):
+    lst = [[None for col in range(b)] for col in range(a)]
+    return lst        
 
 
 """file io"""
