@@ -1,5 +1,39 @@
 import numpy as np
 import seaborn as sns
+import functools
+import time
+
+def get_available_gpus():
+    from tensorflow.python.client import device_lib
+    local_device_protos = device_lib.list_local_devices()
+    gpu_names = [x.name for x in local_device_protos if x.device_type == 'GPU']
+    return gpu_names
+
+def timer(func):
+    """Print the runtime of the decorated function"""
+    @functools.wraps(func)
+    def wrapper_timer(*args, **kwargs):
+        start_time = time.perf_counter()
+        value = func(*args, **kwargs)
+        end_time = time.perf_counter()
+        run_time = end_time - start_time
+        print(f"Finished {func.__name__!r} in {run_time:.4f} secs")
+        return value
+    return wrapper_timer
+
+
+def debug(func):
+    """Print the function signature and return value"""
+    @functools.wraps(func)
+    def wrapper_debug(*args, **kwargs):
+        args_repr = [repr(a) for a in args]
+        kwargs_repr = [f"{k}={v!r}" for k, v in kwargs.items()]
+        signature = ", ".join(args_repr + kwargs_repr)
+        print(f"Calling {func.__name__}({signature})")
+        value = func(*args, **kwargs)
+        print(f"{func.__name__!r} returned {value!r}")
+        return value
+    return wrapper_debug
 
 
 def set_sns_style():
@@ -80,60 +114,64 @@ def print_list(input_list):
     for item in input_list:
         print('%s' % item)
 
+
 """multi dim list"""
+
 
 def list_3d(a, b, c):
     lst = [[[None
              for col in range(c)]
             for col in range(b)]
            for row in range(a)]
-    return lst        
+    return lst
+
 
 def list_2d(a, b):
     lst = [[None for col in range(b)] for col in range(a)]
-    return lst        
+    return lst
 
 
 """file io"""
 
-def load_json_as_dict(fpath): 
+
+def load_json_as_dict(fpath):
     """Get a .json file path, output a dict
     """
     json1_file = open(fpath)
     json1_str = json1_file.read()
     json1_data = json.loads(json1_str)
-    return json1_data    
+    return json1_data
 
 
-def save_dict_as_json(input_dict, save_path): 
-    """Save the dictionary as a .json file 
+def save_dict_as_json(input_dict, save_path):
+    """Save the dictionary as a .json file
     """
     assert os.path.exists(os.path.dirname(save_path))
     with open(save_path, 'w') as f:
         json.dump(input_dict, f)
-        
-    
-def save_dict_by_pickle(input_dict, save_path): 
+
+
+def save_dict_by_pickle(input_dict, save_path):
     """Save the dictionary
-    """    
+    """
     pickle.dump(input_dict, open(save_path, "wb"))
-    
-    
-def load_dict_by_pickle(fpath): 
+
+
+def load_dict_by_pickle(fpath):
     """Load the dictionary
-    """    
-    return pickle.load(open(fpath, "rb"))   
+    """
+    return pickle.load(open(fpath, "rb"))
 
 
-def save_df_by_pickle(input_df, save_path): 
+def save_df_by_pickle(input_df, save_path):
     """Save the dictionary
-    """        
+    """
     input_df.to_pickle(save_path)
-    
-    
-def load_df_by_pickle(fpath): 
+
+
+def load_df_by_pickle(fpath):
     """Load the dictionary
-    """        
+    """
     return pd.read_pickle(fpath)
 
 
